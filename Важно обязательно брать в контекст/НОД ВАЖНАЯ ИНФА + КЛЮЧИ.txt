@@ -1,0 +1,34 @@
+HTTP Provider
+https://old-patient-butterfly.bsc.quiknode.pro/4f77305d4e6f7ce51cace16a02b88659c7ec249d/
+
+WSS Provider
+wss://old-patient-butterfly.bsc.quiknode.pro/4f77305d4e6f7ce51cace16a02b88659c7ec249d/
+
+
+import requests
+import json
+
+url = "https://old-patient-butterfly.bsc.quiknode.pro/4f77305d4e6f7ce51cace16a02b88659c7ec249d/"
+
+payload = json.dumps({
+  "method": "eth_blockNumber",
+  "params": [],
+  "id": 1,
+  "jsonrpc": "2.0"
+})
+
+headers = {
+  'Content-Type': 'application/json'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.text)
+
+
+4f77305d4e6f7ce51cace16a02b88659c7ec249d
+
+https://old-patient-butterfly.bsc.quiknode.pro/4f77305d4e6f7ce51cace16a02b88659c7ec249d
+
+wss://old-patient-butterfly.bsc.quiknode.pro/4f77305d4e6f7ce51cace16a02b88659c7ec249d
+

@@ -1,0 +1,711 @@
+"""
+PLEX Dynamic Staking Manager - Enhanced Rewards Tab
+Улучшенная вкладка для управления наградами с полным набором кнопок.
+
+Автор: PLEX Dynamic Staking Team
+Версия: 1.1.0
+"""
+
+import asyncio
+import threading
+from datetime import datetime, timedelta
+from decimal import Decimal
+from typing import Dict, List, Optional, Any, Tuple
+import tkinter as tk
+from tkinter import messagebox, filedialog, ttk
+import customtkinter as ctk
+
+from ui.themes.dark_theme import get_theme
+from ui.components.progress_bar import ProgressBar, ProgressState
+from utils.logger import get_logger
+from utils.widget_factory import SafeWidgetFactory
+
+logger = get_logger(__name__)
+
+
+class EnhancedRewardsTab(ctk.CTkFrame):
+    """
+    Улучшенная вкладка управления наградами.
+    
+    Функциональность:
+    - Расчет и просмотр наград
+    - Управление выплатами
+    - Экспорт списков для выплат
+    - Предотвращение двойных выплат
+    - История выплат
+    - Полный набор кнопок управления    """
+    
+    def __init__(self, parent, reward_manager=None, widget_factory=None, **kwargs):
+        """
+        Инициализация EnhancedRewardsTab.
+        
+        Args:
+            parent: Родительский виджет
+            reward_manager: Экземпляр RewardManager
+            widget_factory: SafeWidgetFactory для создания виджетов
+            **kwargs: Дополнительные параметры
+        """
+        super().__init__(parent, **kwargs)
+        
+        self.theme = get_theme()
+        self.widget_factory = widget_factory or SafeWidgetFactory(self.theme)
+        self.reward_manager = reward_manager
+        
+        # Данные наград
+        self.current_rewards = []
+        self.filtered_rewards = []
+        self.calculation_running = False
+        self.payout_running = False
+        
+        # Создание интерфейса
+        self._create_widgets()
+        self._setup_layout()
+        
+        logger.info("✅ Enhanced RewardsTab инициализирована")
+    
+    def _create_widgets(self):
+        """Создание виджетов интерфейса."""
+        try:
+            # Заголовок
+            self.title_label = ctk.CTkLabel(
+                self,
+                text="🎁 Управление наградами",
+                font=("Arial", 24, "bold"),
+                text_color=self.theme.colors['text_primary']
+            )
+            
+            # ПАНЕЛЬ УПРАВЛЕНИЯ НАГРАДАМИ
+            self.control_panel = self._create_control_panel()
+            
+            # ПАНЕЛЬ НАСТРОЕК НАГРАД
+            self.settings_panel = self._create_settings_panel()
+            
+            # ПРОГРЕСС-БАР
+            self.progress_bar = ProgressBar(self)
+            
+            # ПАНЕЛЬ РЕЗУЛЬТАТОВ
+            self.results_panel = self._create_results_panel()
+            
+            logger.debug("✅ Все виджеты созданы успешно")
+            
+        except Exception as e:
+            logger.error(f"❌ Ошибка создания виджетов: {e}")
+            raise
+    
+    def _create_control_panel(self) -> ctk.CTkFrame:
+        """Создание панели управления наградами."""
+        panel = ctk.CTkFrame(self)
+        panel.configure(fg_color=self.theme.colors['bg_secondary'])
+        
+        # Заголовок панели
+        title = ctk.CTkLabel(
+            panel,
+            text="🎮 Управление наградами",
+            font=("Arial", 16, "bold"),
+            text_color=self.theme.colors['text_primary']
+        )
+        title.pack(pady=(15, 10))
+        
+        # Основные кнопки
+        buttons_frame = ctk.CTkFrame(panel)
+        buttons_frame.configure(fg_color="transparent")
+        buttons_frame.pack(fill='x', padx=15, pady=10)
+        
+        # Ряд 1: Основные действия
+        row1 = ctk.CTkFrame(buttons_frame)
+        row1.configure(fg_color="transparent")
+        row1.pack(fill='x', pady=5)
+        
+        self.calculate_rewards_btn = ctk.CTkButton(
+            row1,
+            text="🧮 Рассчитать награды",
+            command=self._calculate_rewards,
+            fg_color=self.theme.colors['btn_primary'],
+            hover_color=self.theme.colors['btn_primary_hover'],
+            font=("Arial", 12, "bold"),
+            height=40,
+            width=160
+        )
+        self.calculate_rewards_btn.pack(side='left', padx=(0, 10))
+        
+        self.preview_rewards_btn = ctk.CTkButton(
+            row1,
+            text="👁️ Предпросмотр",
+            command=self._preview_rewards,
+            fg_color=self.theme.colors['info'],
+            font=("Arial", 12, "bold"),
+            height=40,
+            width=150
+        )
+        self.preview_rewards_btn.pack(side='left', padx=(0, 10))
+        
+        self.approve_rewards_btn = ctk.CTkButton(
+            row1,
+            text="✅ Утвердить",
+            command=self._approve_rewards,
+            fg_color=self.theme.colors['success'],
+            font=("Arial", 12, "bold"),
+            height=40,
+            width=130,
+            state="disabled"
+        )
+        self.approve_rewards_btn.pack(side='left', padx=(0, 10))
+        
+        self.reject_rewards_btn = ctk.CTkButton(
+            row1,
+            text="❌ Отклонить",
+            command=self._reject_rewards,
+            fg_color=self.theme.colors['btn_danger'],
+            font=("Arial", 12, "bold"),
+            height=40,
+            width=130,
+            state="disabled"
+        )
+        self.reject_rewards_btn.pack(side='right')
+        
+        # Ряд 2: Выплаты
+        row2 = ctk.CTkFrame(buttons_frame)
+        row2.configure(fg_color="transparent")
+        row2.pack(fill='x', pady=5)
+        
+        self.start_payout_btn = ctk.CTkButton(
+            row2,
+            text="💸 Начать выплаты",
+            command=self._start_payout,
+            fg_color=self.theme.colors['plex_primary'],
+            font=("Arial", 12, "bold"),
+            height=40,
+            width=150,
+            state="disabled"
+        )
+        self.start_payout_btn.pack(side='left', padx=(0, 10))
+        
+        self.stop_payout_btn = ctk.CTkButton(
+            row2,
+            text="⏹️ Остановить выплаты",
+            command=self._stop_payout,
+            fg_color=self.theme.colors['btn_danger'],
+            font=("Arial", 12, "bold"),
+            height=40,
+            width=170,
+            state="disabled"
+        )
+        self.stop_payout_btn.pack(side='left', padx=(0, 10))
+        
+        self.check_status_btn = ctk.CTkButton(
+            row2,
+            text="🔍 Проверить статус",
+            command=self._check_payout_status,
+            fg_color=self.theme.colors['warning'],
+            font=("Arial", 12, "bold"),
+            height=40,
+            width=150
+        )
+        self.check_status_btn.pack(side='left', padx=(0, 10))
+        
+        self.history_btn = ctk.CTkButton(
+            row2,
+            text="📚 История",
+            command=self._show_history,
+            fg_color=self.theme.colors['btn_secondary'],
+            font=("Arial", 12, "bold"),
+            height=40,
+            width=120
+        )
+        self.history_btn.pack(side='right')
+        
+        # Ряд 3: Экспорт и утилиты
+        row3 = ctk.CTkFrame(buttons_frame)
+        row3.configure(fg_color="transparent")
+        row3.pack(fill='x', pady=5)
+        
+        self.export_csv_btn = ctk.CTkButton(
+            row3,
+            text="📄 Экспорт CSV",
+            command=self._export_csv,
+            fg_color=self.theme.colors['success'],
+            font=("Arial", 12, "bold"),
+            height=35,
+            width=130
+        )
+        self.export_csv_btn.pack(side='left', padx=(0, 10))
+        
+        self.export_excel_btn = ctk.CTkButton(
+            row3,
+            text="📊 Экспорт Excel",
+            command=self._export_excel,
+            fg_color=self.theme.colors['success'],
+            font=("Arial", 12, "bold"),
+            height=35,
+            width=130
+        )
+        self.export_excel_btn.pack(side='left', padx=(0, 10))
+        
+        self.export_blockchain_btn = ctk.CTkButton(
+            row3,
+            text="⛓️ Для блокчейна",
+            command=self._export_blockchain,
+            fg_color=self.theme.colors['plex_secondary'],
+            font=("Arial", 12, "bold"),
+            height=35,
+            width=130
+        )
+        self.export_blockchain_btn.pack(side='left', padx=(0, 10))
+        
+        self.validate_btn = ctk.CTkButton(
+            row3,
+            text="🔍 Валидация",
+            command=self._validate_rewards,
+            fg_color=self.theme.colors['info'],
+            font=("Arial", 12, "bold"),
+            height=35,
+            width=120
+        )
+        self.validate_btn.pack(side='right')
+        
+        return panel
+    
+    def _create_settings_panel(self) -> ctk.CTkFrame:
+        """Создание панели настроек наград."""
+        panel = ctk.CTkFrame(self)
+        panel.configure(fg_color=self.theme.colors['bg_secondary'])
+        
+        # Заголовок
+        title = ctk.CTkLabel(
+            panel,
+            text="⚙️ Настройки наград",
+            font=("Arial", 16, "bold"),
+            text_color=self.theme.colors['text_primary']
+        )
+        title.pack(pady=(15, 10))
+        
+        # Настройки в сетке
+        settings_grid = ctk.CTkFrame(panel)
+        settings_grid.configure(fg_color="transparent")
+        settings_grid.pack(fill='x', padx=15, pady=10)
+        
+        # Ряд 1: Тип награды
+        reward_type_frame = ctk.CTkFrame(settings_grid)
+        reward_type_frame.configure(fg_color="transparent")
+        reward_type_frame.pack(fill='x', pady=5)
+        
+        ctk.CTkLabel(
+            reward_type_frame,
+            text="🏆 Тип награды:",
+            text_color=self.theme.colors['text_secondary'],
+            font=("Arial", 12, "bold")
+        ).pack(side='left')
+        
+        self.reward_type_var = ctk.StringVar(value="volume_based")
+        self.reward_type_menu = ctk.CTkOptionMenu(
+            reward_type_frame,
+            values=["По объему", "По уровням", "Равные", "Кастом"],
+            variable=self.reward_type_var,
+            command=self._on_reward_type_change,
+            fg_color=self.theme.colors['input_bg'],
+            button_color=self.theme.colors['btn_primary'],
+            width=150
+        )
+        self.reward_type_menu.pack(side='left', padx=(10, 0))
+        
+        # Быстрые настройки
+        quick_settings = ctk.CTkFrame(reward_type_frame)
+        quick_settings.configure(fg_color="transparent")
+        quick_settings.pack(side='right')
+        
+        ctk.CTkLabel(
+            quick_settings,
+            text="⚡ Быстро:",
+            text_color=self.theme.colors['text_secondary']
+        ).pack(side='left', padx=(0, 5))
+        
+        for preset, text in [("conservative", "Консерв."), ("balanced", "Сбалан."), ("aggressive", "Агрес.")]:
+            btn = ctk.CTkButton(
+                quick_settings,
+                text=text,
+                command=lambda p=preset: self._apply_preset(p),
+                fg_color=self.theme.colors['btn_secondary'],
+                width=70,
+                height=25
+            )
+            btn.pack(side='left', padx=2)
+        
+        # Ряд 2: Параметры
+        params_frame = ctk.CTkFrame(settings_grid)
+        params_frame.configure(fg_color="transparent")
+        params_frame.pack(fill='x', pady=5)
+        
+        # Общий пул наград
+        ctk.CTkLabel(
+            params_frame,
+            text="💰 Общий пул:",
+            text_color=self.theme.colors['text_secondary'],
+            font=("Arial", 12, "bold")
+        ).pack(side='left')
+          self.total_pool_entry = self.widget_factory.create_entry(
+            params_frame,
+            width=120
+        )
+        self.widget_factory.setup_placeholder(self.total_pool_entry, "1000.0")
+        self.total_pool_entry.pack(side='left', padx=(10, 20))
+        
+        # Минимальная награда
+        ctk.CTkLabel(
+            params_frame,
+            text="🎯 Мин. награда:",
+            text_color=self.theme.colors['text_secondary']
+        ).pack(side='left')
+        
+        self.min_reward_entry = self.widget_factory.create_entry(
+    params_frame,
+    width=100
+)
+self.widget_factory.setup_placeholder(min_reward_entry, "0.1")
+        self.min_reward_entry.pack(side='left', padx=(10, 20))
+        
+        # Переключатели
+        self.auto_approve_var = ctk.BooleanVar()
+        self.auto_approve_switch = ctk.CTkSwitch(
+            params_frame,
+            text="🤖 Авто-утверждение",
+            variable=self.auto_approve_var,
+            text_color=self.theme.colors['text_secondary']
+        )
+        self.auto_approve_switch.pack(side='right', padx=(0, 20))
+        
+        # Ряд 3: Дополнительные параметры
+        additional_frame = ctk.CTkFrame(settings_grid)
+        additional_frame.configure(fg_color="transparent")
+        additional_frame.pack(fill='x', pady=5)
+        
+        # Комиссия
+        ctk.CTkLabel(
+            additional_frame,
+            text="💸 Комиссия (%):",
+            text_color=self.theme.colors['text_secondary']
+        ).pack(side='left')
+        
+        self.fee_entry = self.widget_factory.create_entry(
+    additional_frame,
+    width=80
+)
+self.widget_factory.setup_placeholder(fee_entry, "0.5")
+        self.fee_entry.pack(side='left', padx=(10, 20))
+        
+        # Максимальные выплаты в час
+        ctk.CTkLabel(
+            additional_frame,
+            text="⏱️ Макс в час:",
+            text_color=self.theme.colors['text_secondary']
+        ).pack(side='left')
+        
+        self.max_per_hour_entry = self.widget_factory.create_entry(
+    additional_frame,
+    width=80
+)
+self.widget_factory.setup_placeholder(max_per_hour_entry, "100")
+        self.max_per_hour_entry.pack(side='left', padx=(10, 20))
+        
+        # Переключатель безопасного режима
+        self.safe_mode_var = ctk.BooleanVar(value=True)
+        self.safe_mode_switch = ctk.CTkSwitch(
+            additional_frame,
+            text="🛡️ Безопасный режим",
+            variable=self.safe_mode_var,
+            text_color=self.theme.colors['text_secondary']
+        )
+        self.safe_mode_switch.pack(side='right')
+        
+        return panel
+    
+    def _create_results_panel(self) -> ctk.CTkFrame:
+        """Создание панели результатов."""
+        panel = ctk.CTkFrame(self)
+        panel.configure(fg_color=self.theme.colors['bg_secondary'])
+        
+        # Заголовок с кнопками управления
+        header = ctk.CTkFrame(panel)
+        header.configure(fg_color="transparent")
+        header.pack(fill='x', padx=15, pady=(15, 10))
+        
+        title = ctk.CTkLabel(
+            header,
+            text="🎁 Список наград",
+            font=("Arial", 16, "bold"),
+            text_color=self.theme.colors['text_primary']
+        )
+        title.pack(side='left')
+        
+        # Кнопки управления списком
+        list_controls = ctk.CTkFrame(header)
+        list_controls.configure(fg_color="transparent")
+        list_controls.pack(side='right')
+        
+        self.search_entry = self.widget_factory.create_entry(
+    list_controls,
+    width=200
+)
+self.widget_factory.setup_placeholder(search_entry, "🔍 Поиск по адресу...")
+        self.search_entry.pack(side='left', padx=(0, 10))
+        
+        self.filter_btn = ctk.CTkButton(
+            list_controls,
+            text="🔽 Фильтр",
+            command=self._show_filter_menu,
+            fg_color=self.theme.colors['btn_secondary'],
+            width=80,
+            height=30
+        )
+        self.filter_btn.pack(side='left', padx=(0, 5))
+        
+        self.sort_btn = ctk.CTkButton(
+            list_controls,
+            text="📊 Сорт.",
+            command=self._show_sort_menu,
+            fg_color=self.theme.colors['btn_secondary'],
+            width=80,
+            height=30
+        )
+        self.sort_btn.pack(side='left')
+        
+        # Статистика наград
+        self.stats_frame = ctk.CTkFrame(panel)
+        self.stats_frame.configure(fg_color=self.theme.colors['bg_tertiary'])
+        self.stats_frame.pack(fill='x', padx=15, pady=10)
+        
+        # Карточки статистики наград
+        self._create_reward_stats_cards()
+        
+        # Список наград
+        self.rewards_list_frame = ctk.CTkFrame(panel)
+        self.rewards_list_frame.configure(fg_color=self.theme.colors['bg_tertiary'])
+        self.rewards_list_frame.pack(fill='both', expand=True, padx=15, pady=(0, 15))
+        
+        # Заглушка для списка
+        self.rewards_placeholder = ctk.CTkLabel(
+            self.rewards_list_frame,
+            text="💰 Рассчитайте награды для отображения списка",
+            font=("Arial", 14),
+            text_color=self.theme.colors['text_muted']
+        )
+        self.rewards_placeholder.pack(expand=True, pady=50)
+        
+        return panel
+    
+    def _create_reward_stats_cards(self):
+        """Создание карточек статистики наград."""
+        stats_data = [
+            ("💰", "Общий пул", "0.0 PLEX", "plex_primary"),
+            ("👥", "Получателей", "0", "info"),
+            ("🎁", "Средняя награда", "0.0 PLEX", "success"),
+            ("📊", "Статус", "Не рассчитано", "warning")
+        ]
+        
+        for icon, title, value, color in stats_data:
+            card = ctk.CTkFrame(self.stats_frame)
+            card.configure(fg_color=self.theme.colors['bg_primary'])
+            card.pack(side='left', fill='x', expand=True, padx=5, pady=10)
+            
+            ctk.CTkLabel(
+                card,
+                text=icon,
+                font=("Arial", 20)
+            ).pack(pady=(10, 0))
+            
+            ctk.CTkLabel(
+                card,
+                text=title,
+                font=("Arial", 11),
+                text_color=self.theme.colors['text_secondary']
+            ).pack()
+            
+            ctk.CTkLabel(
+                card,
+                text=value,
+                font=("Arial", 14, "bold"),
+                text_color=self.theme.colors[color] if color in self.theme.colors else self.theme.colors['text_primary']
+            ).pack(pady=(0, 10))
+    
+    def _setup_layout(self):
+        """Настройка расположения виджетов."""
+        try:
+            # Настройка grid weights
+            self.grid_rowconfigure(4, weight=1)  # Результаты растягиваются
+            self.grid_columnconfigure(0, weight=1)
+            
+            # Размещение компонентов
+            self.title_label.grid(row=0, column=0, pady=(20, 10), sticky="ew")
+            self.control_panel.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
+            self.settings_panel.grid(row=2, column=0, padx=20, pady=10, sticky="ew")
+            self.progress_bar.grid(row=3, column=0, padx=20, pady=10, sticky="ew")
+            self.results_panel.grid(row=4, column=0, padx=20, pady=(0, 20), sticky="nsew")
+            
+            logger.debug("✅ Layout настроен успешно")
+            
+        except Exception as e:
+            logger.error(f"❌ Ошибка настройки layout: {e}")
+    
+    # Методы обработки событий
+    def _calculate_rewards(self):
+        """Расчет наград."""
+        logger.info("🧮 Начинаем расчет наград...")
+        
+        # Изменение состояния кнопок
+        self.calculate_rewards_btn.configure(state="disabled")
+        
+        # Симуляция расчета
+        self._simulate_calculation()
+    
+    def _simulate_calculation(self):
+        """Симуляция расчета наград."""
+        def run_calculation():
+            try:
+                self.calculation_running = True
+                
+                for i in range(101):
+                    if not self.calculation_running:
+                        break
+                    
+                    progress = i / 100
+                    message = f"Расчет наград... {i}%"
+                    
+                    self.after(0, lambda p=progress, m=message: self.progress_bar.set_progress(p, m))
+                    threading.Event().wait(0.03)
+                
+                if self.calculation_running:
+                    self.after(0, self._calculation_completed)
+                    
+            except Exception as e:
+                logger.error(f"❌ Ошибка расчета: {e}")
+                self.after(0, self._reset_buttons)
+        
+        thread = threading.Thread(target=run_calculation, daemon=True)
+        thread.start()
+    
+    def _calculation_completed(self):
+        """Завершение расчета наград."""
+        logger.info("✅ Расчет наград завершен")
+        
+        self.calculation_running = False
+        self.calculate_rewards_btn.configure(state="normal")
+        self.approve_rewards_btn.configure(state="normal")
+        self.reject_rewards_btn.configure(state="normal")
+        
+        self.progress_bar.set_progress(1.0, "Расчет завершен!")
+        
+        # Обновление заглушки
+        self.rewards_placeholder.configure(
+            text="✅ Найдено 75 получателей наград\\n💰 Общая сумма: 856.34 PLEX"
+        )
+    
+    def _preview_rewards(self):
+        """Предпросмотр наград."""
+        logger.info("👁️ Предпросмотр наград...")
+        messagebox.showinfo("Предпросмотр", "Окно предпросмотра наград (в разработке)")
+    
+    def _approve_rewards(self):
+        """Утверждение наград."""
+        logger.info("✅ Утверждение наград...")
+        self.start_payout_btn.configure(state="normal")
+        messagebox.showinfo("Утверждено", "Награды утверждены для выплаты!")
+    
+    def _reject_rewards(self):
+        """Отклонение наград."""
+        logger.info("❌ Отклонение наград...")
+        self._reset_buttons()
+        messagebox.showinfo("Отклонено", "Расчет наград отклонен. Требуется пересчет.")
+    
+    def _start_payout(self):
+        """Начало выплат."""
+        logger.info("💸 Начинаем выплаты...")
+        
+        self.payout_running = True
+        self.start_payout_btn.configure(state="disabled")
+        self.stop_payout_btn.configure(state="normal")
+        
+        messagebox.showinfo("Выплаты", "Выплаты начаты! (Демо режим)")
+    
+    def _stop_payout(self):
+        """Остановка выплат."""
+        logger.info("⏹️ Остановка выплат...")
+        
+        self.payout_running = False
+        self.start_payout_btn.configure(state="normal")
+        self.stop_payout_btn.configure(state="disabled")
+        
+        messagebox.showinfo("Остановлено", "Выплаты остановлены")
+    
+    def _check_payout_status(self):
+        """Проверка статуса выплат."""
+        logger.info("🔍 Проверка статуса выплат...")
+        messagebox.showinfo("Статус", "Статус выплат: В процессе (Демо)")
+    
+    def _show_history(self):
+        """Показ истории выплат."""
+        logger.info("📚 История выплат...")
+        messagebox.showinfo("История", "Окно истории выплат (в разработке)")
+    
+    def _export_csv(self):
+        """Экспорт в CSV."""
+        logger.info("📄 Экспорт в CSV...")
+        messagebox.showinfo("Экспорт", "CSV файл сохранен!")
+    
+    def _export_excel(self):
+        """Экспорт в Excel."""
+        logger.info("📊 Экспорт в Excel...")
+        messagebox.showinfo("Экспорт", "Excel файл сохранен!")
+    
+    def _export_blockchain(self):
+        """Экспорт для блокчейна."""
+        logger.info("⛓️ Экспорт для блокчейна...")
+        messagebox.showinfo("Экспорт", "Файл для блокчейн-транзакций создан!")
+    
+    def _validate_rewards(self):
+        """Валидация наград."""
+        logger.info("🔍 Валидация наград...")
+        messagebox.showinfo("Валидация", "Все награды прошли валидацию!")
+    
+    def _show_filter_menu(self):
+        """Показ меню фильтров."""
+        logger.info("🔽 Меню фильтров...")
+        messagebox.showinfo("Фильтры", "Меню фильтров (в разработке)")
+    
+    def _show_sort_menu(self):
+        """Показ меню сортировки."""
+        logger.info("📊 Меню сортировки...")
+        messagebox.showinfo("Сортировка", "Меню сортировки (в разработке)")
+    
+    def _on_reward_type_change(self, value):
+        """Обработка изменения типа награды."""
+        logger.debug(f"Тип награды изменен на: {value}")
+    
+    def _apply_preset(self, preset):
+        """Применение быстрых настроек."""
+        logger.info(f"⚡ Применение пресета: {preset}")
+        
+        presets = {
+            "conservative": {"pool": "500.0", "min": "1.0", "fee": "0.1"},
+            "balanced": {"pool": "1000.0", "min": "0.5", "fee": "0.5"},
+            "aggressive": {"pool": "2000.0", "min": "0.1", "fee": "1.0"}
+        }
+        
+        if preset in presets:
+            p = presets[preset]
+            self.total_pool_entry.delete(0, "end")
+            self.total_pool_entry.insert(0, p["pool"])
+            self.min_reward_entry.delete(0, "end")
+            self.min_reward_entry.insert(0, p["min"])
+            self.fee_entry.delete(0, "end")
+            self.fee_entry.insert(0, p["fee"])
+    
+    def _reset_buttons(self):
+        """Сброс состояния кнопок."""
+        self.calculate_rewards_btn.configure(state="normal")
+        self.approve_rewards_btn.configure(state="disabled")
+        self.reject_rewards_btn.configure(state="disabled")
+        self.start_payout_btn.configure(state="disabled")
+    
+    def set_reward_manager(self, reward_manager):
+        """Установка менеджера наград."""
+        self.reward_manager = reward_manager
+        logger.info("✅ RewardManager подключен к Enhanced RewardsTab")

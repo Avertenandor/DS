@@ -1,0 +1,535 @@
+# Полный справочник QuickNode для Binance Smart Chain (BSC)
+
+## 1. Полный список RPC методов BSC в QuickNode
+
+QuickNode поддерживает полный набор стандартных Ethereum JSON-RPC методов для BSC, а также специфичные для BSC методы:
+
+### Стандартные Web3 методы
+- **web3_clientVersion** - возвращает версию клиента
+- **web3_sha3** - возвращает Keccak-256 хеш данных
+
+### Net методы
+- **net_version** - возвращает ID сети (56 для mainnet, 97 для testnet)
+- **net_listening** - статус прослушивания сетевых подключений
+- **net_peerCount** - количество подключенных пиров
+
+### Основные Eth методы
+- **eth_protocolVersion** - версия протокола Ethereum
+- **eth_syncing** - статус синхронизации
+- **eth_coinbase** - адрес coinbase клиента
+- **eth_mining** - статус майнинга
+- **eth_hashrate** - хешрейт майнинга
+- **eth_gasPrice** - текущая цена газа в wei
+- **eth_accounts** - список адресов клиента
+- **eth_blockNumber** - номер последнего блока
+- **eth_getBalance** - баланс адреса
+- **eth_getStorageAt** - значение из позиции хранилища
+- **eth_getTransactionCount** - количество транзакций (nonce)
+- **eth_getBlockTransactionCountByHash** - количество транзакций в блоке по хешу
+- **eth_getBlockTransactionCountByNumber** - количество транзакций в блоке по номеру
+- **eth_getUncleCountByBlockHash** - количество uncle блоков по хешу
+- **eth_getUncleCountByBlockNumber** - количество uncle блоков по номеру
+- **eth_getCode** - код по адресу
+
+### Методы транзакций
+- **eth_sign** - подпись данных
+- **eth_sendTransaction** - создание новой транзакции
+- **eth_sendRawTransaction** - отправка подписанной транзакции
+- **eth_call** - выполнение вызова без создания транзакции
+- **eth_estimateGas** - оценка газа для транзакции
+
+### Получение блоков и транзакций
+- **eth_getBlockByHash** - информация о блоке по хешу
+- **eth_getBlockByNumber** - информация о блоке по номеру
+- **eth_getTransactionByHash** - информация о транзакции по хешу
+- **eth_getTransactionByBlockHashAndIndex** - транзакция по хешу блока и индексу
+- **eth_getTransactionByBlockNumberAndIndex** - транзакция по номеру блока и индексу
+- **eth_getTransactionReceipt** - квитанция транзакции
+- **eth_getUncleByBlockHashAndIndex** - uncle блок по хешу и индексу
+- **eth_getUncleByBlockNumberAndIndex** - uncle блок по номеру и индексу
+
+### Методы фильтров
+- **eth_newFilter** - создание фильтра для уведомлений
+- **eth_newBlockFilter** - фильтр для новых блоков
+- **eth_newPendingTransactionFilter** - фильтр для pending транзакций
+- **eth_uninstallFilter** - удаление фильтра
+- **eth_getFilterChanges** - получение изменений по фильтру
+- **eth_getFilterLogs** - все логи по фильтру
+- **eth_getLogs** - логи по параметрам фильтра
+
+### WebSocket подписки
+- **eth_subscribe** - создание подписки на события
+- **eth_unsubscribe** - отмена подписки
+
+### BSC-специфичные методы
+
+#### Parlia консенсус методы
+- **parlia_getSnapshot** - снимок валидаторов на блоке
+- **parlia_getValidators** - список валидаторов на блоке
+- **parlia_getValidatorsAtHash** - валидаторы по хешу блока
+
+#### BSC Finality API
+- **eth_getFinalizedBlock** - последний финализированный блок
+- **eth_getFinalizedHeader** - заголовок финализированного блока
+
+#### BSC Blob API (EIP-4844)
+- **eth_getBlobBaseFee** - базовая комиссия для blob
+- **eth_blobBaseFee** - альтернативный метод для blob base fee
+
+## 2. Детальное описание методов с примерами
+
+### eth_getBalance
+**Параметры:**
+- `address` (DATA, 20 bytes) - адрес для проверки баланса
+- `block` (QUANTITY|TAG) - номер блока или тег ("latest", "earliest", "pending")
+
+**Формат запроса:**
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "eth_getBalance",
+  "params": ["0x6E0d01A76C3Cf4288372a29124A26D4353EE51BE", "latest"],
+  "id": 1
+}
+```
+
+**Формат ответа:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "0x1a055690d9db80000"
+}
+```
+
+### eth_sendRawTransaction
+**Параметры:**
+- `data` (DATA) - подписанные данные транзакции
+
+**Формат запроса:**
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "eth_sendRawTransaction",
+  "params": ["0xf86c0a8502540be40082520894..."],
+  "id": 1
+}
+```
+
+**Формат ответа:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "0xe670ec64341771606e55d6b4ca35a1a6b75ee3d5145a99d05921026d1527331"
+}
+```
+
+## 3. Примеры использования на разных языках
+
+### JavaScript (Node.js)
+
+```javascript
+const Web3 = require('web3');
+const web3 = new Web3('https://your-endpoint.bsc.quiknode.pro/your-token/');
+
+// Получение баланса
+async function getBalance(address) {
+    const balance = await web3.eth.getBalance(address);
+    console.log(`Balance: ${web3.utils.fromWei(balance, 'ether')} BNB`);
+}
+
+// Отправка транзакции
+async function sendTransaction() {
+    const tx = {
+        from: '0xYourAddress',
+        to: '0xRecipientAddress',
+        value: web3.utils.toWei('0.1', 'ether'),
+        gas: 21000,
+        gasPrice: await web3.eth.getGasPrice()
+    };
+    
+    const signedTx = await web3.eth.accounts.signTransaction(tx, 'YOUR_PRIVATE_KEY');
+    const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+    console.log('Transaction hash:', receipt.transactionHash);
+}
+```
+
+### Python
+
+```python
+from web3 import Web3
+
+w3 = Web3(Web3.HTTPProvider('https://your-endpoint.bsc.quiknode.pro/your-token/'))
+
+# Проверка подключения
+if w3.is_connected():
+    print("Connected to BSC")
+    
+# Получение баланса
+def get_balance(address):
+    balance = w3.eth.get_balance(address)
+    return w3.from_wei(balance, 'ether')
+
+# Отправка транзакции
+def send_transaction(private_key, to_address, amount_in_bnb):
+    account = w3.eth.account.from_key(private_key)
+    nonce = w3.eth.get_transaction_count(account.address)
+    
+    transaction = {
+        'nonce': nonce,
+        'to': to_address,
+        'value': w3.to_wei(amount_in_bnb, 'ether'),
+        'gas': 21000,
+        'gasPrice': w3.eth.gas_price,
+        'chainId': 56
+    }
+    
+    signed_txn = w3.eth.account.sign_transaction(transaction, private_key)
+    tx_hash = w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+    return tx_hash.hex()
+```
+
+### cURL
+
+```bash
+# Получение последнего блока
+curl https://your-endpoint.bsc.quiknode.pro/your-token/ \
+  -X POST \
+  -H "Content-Type: application/json" \
+  --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}'
+
+# Получение баланса
+curl https://your-endpoint.bsc.quiknode.pro/your-token/ \
+  -X POST \
+  -H "Content-Type: application/json" \
+  --data '{"jsonrpc":"2.0","method":"eth_getBalance","params":["0x6E0d01A76C3Cf4288372a29124A26D4353EE51BE", "latest"],"id":1}'
+```
+
+### Go
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+    "math/big"
+    
+    "github.com/ethereum/go-ethereum/ethclient"
+    "github.com/ethereum/go-ethereum/common"
+)
+
+func main() {
+    client, err := ethclient.Dial("https://your-endpoint.bsc.quiknode.pro/your-token/")
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    // Получение баланса
+    account := common.HexToAddress("0x6E0d01A76C3Cf4288372a29124A26D4353EE51BE")
+    balance, err := client.BalanceAt(context.Background(), account, nil)
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    fmt.Printf("Balance: %s\n", balance.String())
+}
+```
+
+### Ruby
+
+```ruby
+require 'eth'
+
+client = Eth::Client.create('https://your-endpoint.bsc.quiknode.pro/your-token/')
+
+# Получение баланса
+balance = client.eth_get_balance('0x6E0d01A76C3Cf4288372a29124A26D4353EE51BE')
+balance_bnb = balance['result'].to_i(16) / 1e18
+puts "Balance: #{balance_bnb} BNB"
+```
+
+## 4. WebSocket методы и подписки
+
+### JavaScript WebSocket пример
+
+```javascript
+const WebSocket = require('ws');
+const ws = new WebSocket('wss://your-endpoint.bsc.quiknode.pro/your-token/');
+
+ws.on('open', function open() {
+    // Подписка на новые блоки
+    ws.send(JSON.stringify({
+        id: 1,
+        method: "eth_subscribe",
+        params: ["newHeads"]
+    }));
+    
+    // Подписка на pending транзакции
+    ws.send(JSON.stringify({
+        id: 2,
+        method: "eth_subscribe",
+        params: ["pendingTransactions"]
+    }));
+    
+    // Подписка на логи
+    ws.send(JSON.stringify({
+        id: 3,
+        method: "eth_subscribe",
+        params: ["logs", {
+            address: "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82",
+            topics: ["0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"]
+        }]
+    }));
+});
+
+ws.on('message', function message(data) {
+    const response = JSON.parse(data);
+    console.log('Received:', response);
+});
+```
+
+## 5. BSC-специфичные особенности и оптимизации
+
+### Ключевые особенности BSC в QuickNode:
+- **Скорость**: В 2.5 раза быстрее ответы API по сравнению с конкурентами
+- **Время блока**: ~3 секунды (быстрее Ethereum)
+- **Финальность**: ~45 секунд (21 валидатор, требуется 2/3+1 подтверждений)
+- **Консенсус**: Parlia (Proof of Staked Authority)
+- **Chain ID**: 56 для mainnet, 97 для testnet
+- **Газ**: Использует BNB вместо ETH для оплаты газа
+
+### Оптимизации инфраструктуры:
+- **Глобальная балансировка нагрузки**: Автоматическая маршрутизация к ближайшему доступному узлу
+- **99.99% SLA**: Гарантированная доступность
+- **400+ миллиардов API запросов**: Ежемесячная пропускная способность
+- **Архивные узлы**: Полный доступ к историческим данным
+
+## 6. BSC-специфичные add-ons
+
+### Token API v2 Bundle
+- **Функции**: 
+  - Метаданные токенов ERC-20
+  - Балансы и трансферы
+  - История транзакций
+  - Мультикошельковое отслеживание портфеля
+- **Методы**: qn_fetchTokens, qn_getTokenBalances
+- **Стоимость**: 4 API кредита за вызов
+
+### NFT API v2 Bundle
+- **Функции**:
+  - Получение метаданных NFT
+  - Верификация владения
+  - Детали коллекций
+  - Кросс-чейн поддержка
+- **Методы**: qn_fetchNFTs, qn_verifyNFTsOwner, qn_fetchNFTCollectionDetails
+- **Стоимость**: 4 API кредита за вызов
+
+### BlockSpan NFT API
+- **Функции**: Мульти-чейн агрегация данных NFT
+- **Особенности**: Фильтрация спама, оценка редкости, кэшированные активы
+
+### MistTrack Address Risk Scores
+- **Функции**: AML оценка рисков для BSC адресов
+- **Методы**: mt_addressRiskScore, mt_addressLabel
+
+### Endpoint Armor
+- **Функции**: Расширенная защита эндпоинтов
+- **Особенности**: Метод-специфичные лимиты, контроль доступа
+
+## 7. Настройки безопасности и аутентификации
+
+### Методы аутентификации:
+- **Токены в URL**: Стандартная аутентификация через токены в URL
+- **JWT**: Поддержка RS256 и ES256 алгоритмов (доступно с плана Build)
+- **Множественные токены**: Создание нескольких токенов для разных целей
+
+### Функции безопасности:
+- **IP Whitelisting**: Ограничение доступа по IP адресам
+- **Referrer списки**: Контроль доступа по HTTP заголовкам
+- **HTTPS/WSS**: Все соединения защищены
+- **Сертификаты**: SOC 1 Type 2, SOC 2 Type 2, ISO 27001
+
+### Rate Limiting:
+- **По методам**: Настройка лимитов для конкретных RPC методов
+- **По IP**: Контроль общего количества запросов с одного IP
+- **По планам**: Разные лимиты для разных тарифных планов
+
+## 8. Лимиты, тарификация и оптимизация затрат
+
+### Система API кредитов:
+- **Базовый множитель BSC**: 20x для всех стандартных методов
+- **Trace & Debug**: Дополнительный 2x множитель (всего 40x)
+- **Большие вызовы**: Дополнительный 4x множитель (всего 80x)
+
+### Тарифные планы (2025):
+- **Free**: 10 миллионов API кредитов в месяц
+- **Build**: $49/месяц - 80 миллионов API кредитов
+- **Scale**: $299/месяц - 450 миллионов API кредитов
+- **Business**: 950 миллионов API кредитов
+- **Enterprise**: 2+ миллиарда API кредитов, индивидуальные цены
+
+### Превышение лимитов:
+- **Дополнительная плата**: $10 за миллион API кредитов
+- **Автоматическое выставление счета**: При превышении $200
+- **Enterprise скидки**: $2-3 за миллион при больших объемах
+
+### Стратегии оптимизации затрат:
+1. Используйте эффективные RPC методы
+2. Внедрите клиентское кэширование
+3. Используйте batch операции где возможно
+4. Мониторьте использование через дашборд
+5. Выберите подходящий тарифный план
+
+## 9. Debug и trace методы
+
+### debug_traceTransaction
+```javascript
+const trace = await provider.send("debug_traceTransaction", [
+  "0x0ff2022252b448cb86c90653ac26f432669f1dc29c74f3586e143ce1e386c00a",
+  {"tracer": "callTracer"}
+]);
+```
+
+### debug_traceBlockByNumber
+```javascript
+const blockTrace = await provider.send("debug_traceBlockByNumber", [
+  "0xccde12",
+  {"tracer": "callTracer"}
+]);
+```
+
+### debug_traceCall
+```javascript
+const callTrace = await provider.send("debug_traceCall", [
+  {
+    "from": null,
+    "to": "0x6b175474e89094c44da98b954eedeac495271d0f",
+    "data": "0x70a082310000000000000000000000006E0d01A76C3Cf4288372a29124A26D4353EE51BE"
+  },
+  "latest",
+  {"tracer": "callTracer"}
+]);
+```
+
+### Опции трассировки:
+- **callTracer**: Возвращает фреймы вызовов
+- **prestateTracer**: Показывает состояние до и после
+- **4byteTracer**: Захватывает сигнатуры функций
+- **disableStorage**: Пропускает трассировку хранилища
+- **disableMemory**: Пропускает трассировку памяти
+
+## 10. Примеры интеграции с BSC протоколами
+
+### PancakeSwap интеграция
+
+```javascript
+const PANCAKESWAP_ROUTER = "0x10ED43C718714eb63d5aA57B78B54704E256024E";
+const PANCAKESWAP_FACTORY = "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73";
+
+// Мониторинг создания новых пар
+const factoryContract = new ethers.Contract(
+  PANCAKESWAP_FACTORY,
+  ["event PairCreated(address indexed token0, address indexed token1, address pair, uint)"],
+  provider
+);
+
+factoryContract.on("PairCreated", async (token0, token1, pair) => {
+  console.log(`New pair: ${token0}/${token1} at ${pair}`);
+});
+
+// Выполнение свопа
+async function swapTokens(tokenIn, tokenOut, amountIn) {
+  const router = new ethers.Contract(PANCAKESWAP_ROUTER, routerABI, wallet);
+  
+  const amounts = await router.getAmountsOut(amountIn, [tokenIn, tokenOut]);
+  const amountOutMin = amounts[1].mul(95).div(100); // 5% slippage
+  
+  const tx = await router.swapExactTokensForTokens(
+    amountIn,
+    amountOutMin,
+    [tokenIn, tokenOut],
+    wallet.address,
+    Math.floor(Date.now() / 1000) + 60 * 20
+  );
+  
+  return tx;
+}
+```
+
+### Venus Protocol интеграция
+
+```javascript
+const VENUS_COMPTROLLER = "0xfD36E2c2a6789Db23113685031d7F16329158384";
+const vBNB = "0xA07c5b74C9B40447a954e1466938b865b6BBea36";
+
+// Поставка активов в Venus
+async function supplyToVenus(amount) {
+  const vToken = new ethers.Contract(vBNB, venusABI, wallet);
+  const tx = await vToken.supply(amount, { value: amount });
+  return tx;
+}
+
+// Мониторинг ликвидаций
+const comptroller = new ethers.Contract(VENUS_COMPTROLLER, comptrollerABI, provider);
+comptroller.on("LiquidateBorrow", (liquidator, borrower, repayAmount) => {
+  console.log(`Liquidation: ${borrower} by ${liquidator}`);
+});
+```
+
+## 11. Batch запросы и оптимизация производительности
+
+### Single Flight RPC Add-on (рекомендуется)
+```javascript
+// Получить блок со всеми квитанциями за один вызов
+const blockWithReceipts = await provider.send("qn_getBlockWithReceipts", ["latest"]);
+```
+
+### Традиционные batch запросы (не рекомендуется QuickNode)
+```json
+[
+  {"jsonrpc": "2.0", "method": "eth_getBlockByNumber", "params": ["0x1", false], "id": 1},
+  {"jsonrpc": "2.0", "method": "eth_getBalance", "params": ["0x...", "latest"], "id": 2}
+]
+```
+
+### Оптимизация производительности:
+1. **Используйте HTTP для больших ответов** вместо WebSocket
+2. **Реализуйте пулы соединений** для высоконагруженных приложений
+3. **Кэшируйте часто используемые данные** (метаданные контрактов, статические данные)
+4. **Используйте StaticJsonRpcProvider** для высокочастотных запросов
+5. **Внедрите экспоненциальный backoff** для повторных попыток
+
+## 12. Специальные флаги и параметры
+
+### Архивный режим:
+- **Доступность**: Включен во все планы
+- **Использование**: Для данных старше 128 блоков
+- **Индикатор**: Ошибка "missing trie node" указывает на необходимость архивного узла
+
+### BSC-специфичные параметры:
+- **Время блока**: ~3 секунды
+- **Финальность**: Parlia консенсус с быстрой финальностью
+- **EIP-4844 поддержка**: Shard Blob транзакции (BEP-336)
+
+### Флаги конфигурации узла:
+```bash
+# Полный узел BSC
+./geth --config ./config.toml --datadir <datadir> --cache 8000
+
+# Быстрый узел (производительность)
+./geth --tries-verify-mode none --config ./config.toml --datadir ./node --cache 8000
+
+# Архивный режим
+./geth --gcmode=archive --syncmode=full --txlookuplimit=0
+```
+
+### Рекомендации по мониторингу:
+- **QuickNode Dashboard**: Отслеживание использования в реальном времени
+- **Streams**: Расширенная фильтрация и трансформация данных
+- **Webhook уведомления**: Мгновенные оповещения о событиях
+- **Логирование**: Доступ к RPC логам для отладки
+
+Этот справочник предоставляет полную информацию для работы с BSC через QuickNode, включая все доступные методы, примеры кода, специфичные особенности и рекомендации по оптимизации.

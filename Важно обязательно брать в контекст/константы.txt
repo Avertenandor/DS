@@ -1,0 +1,117 @@
+# constants.py
+
+from web3 import Web3
+
+# ────────────────────────────────────────────────────────────────────────────────
+# QuickNode / RPC endpoints
+# ────────────────────────────────────────────────────────────────────────────────
+# Ваш API-ключ (Request ID) — храните в ENV или .env в продакшене
+QUICKNODE_API_KEY = "4f77305d4e6f7ce51cace16a02b88659c7ec249d"
+
+# HTTP JSON-RPC endpoint
+QUICKNODE_HTTP = (
+    f"https://old-patient-butterfly.bsc.quiknode.pro/{QUICKNODE_API_KEY}/"
+)
+
+# WebSocket endpoint — для подписок (eth_subscribe)
+QUICKNODE_WSS = (
+    f"wss://old-patient-butterfly.bsc.quiknode.pro/{QUICKNODE_API_KEY}/"
+)
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Chain / Token settings
+# ────────────────────────────────────────────────────────────────────────────────
+CHAIN_ID       = 56          # BSC Mainnet
+TOKEN_DECIMALS = 9           # PLEX token decimals
+
+# Адрес аудируемого токена (пример)
+TOKEN_CONTRACT = Web3.toChecksumAddress(
+    "0x7Ba98610531ad480F71F7D43B7aa26882CB6d32f"
+)
+
+# Корпоративный кошелёк
+CORP_WALLET = Web3.toChecksumAddress(
+    "0x45CA53Be5aF05DC93E1D7Cab3eAB610A88890295"
+)
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Event filtering
+# ────────────────────────────────────────────────────────────────────────────────
+# Сигнатура события Transfer(address,address,uint256)
+TRANSFER_EVENT_SIG = Web3.keccak(text="Transfer(address,address,uint256)").hex()
+
+# Тopic для to-адреса (корпоративного кошелька), выровненный в 32 байта
+TOPIC_TO = Web3.toHex(
+    Web3.toBytes(hexstr=CORP_WALLET).rjust(32, b'\x00')
+)
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Chunking & Retry policy
+# ────────────────────────────────────────────────────────────────────────────────
+# Базовая задержка между запросами (сек)
+REQUEST_DELAY      = 0.1
+
+# Размеры чанков поиска логов (кол-во блоков)
+CHUNK_INITIAL_SIZE = 1000
+CHUNK_MAX_SIZE     = 5000
+CHUNK_MIN_SIZE     = 100
+
+# Сколько раз ретраить запросы по RPC
+MAX_RETRIES = 3
+
+# Таймауты соединения и чтения (сек)
+TIMEOUTS = (10, 30)  # (connect_timeout, read_timeout)
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Liquidity pools (по необходимости)
+# ────────────────────────────────────────────────────────────────────────────────
+LIQUIDITY_POOLS = {
+    Web3.toChecksumAddress("0x1234567890123456789012345678901234567890"),
+    Web3.toChecksumAddress("0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"),
+}
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Известные хакерские кошельки (чёрный список)
+# ────────────────────────────────────────────────────────────────────────────────
+HACKER_WALLETS = {
+    Web3.toChecksumAddress(addr) for addr in [
+        "0xE771578320857474EfCF2FEfC63783CFc8D0b418",
+        "0xa98b58dc06e679C2C082158F39BD5b00dA4A64Ed",
+        "0x167845fc467DcAc852C5b895F4F64f6AEBDE154f",
+        "0xDBAC5F29460eB4E4Ef41a0737c9D582E7c7CB4E2",
+        "0x61A34D87da8fe7cFDd461997Ad0d9D2A5D911838",
+        "0x00FD71DdFE7fCA4090AA7DF6e7Dd5e3c4d07796a",
+        "0x9615d5775319f99Cb3dE862fD760bD90aF6dC8A5",
+        "0x3a460F9fDeB189C13E35F3d5fB20f9dc40B56ff9",
+        "0x5Db48F679066b4025c070347e9C6DbDe8De84590",
+        "0xc705A01F9caA8374A7aA1dabb6a80F81fF5D2893",
+        "0x87dA9164850F111ceDcFF97EBcd461702979441D",
+        "0xf5cb89562f6181A66C8e5c742993a5F0ACf62d29",
+        "0x455FA97D8559f96345F6C9Aac1D5d41E680c1EEA",
+        "0xAd3dA33645c69D26a5b007f86e8d49aEd727599A",
+        "0x0EC5b6B92e2eFB3097C038c3cd884f2EcfEb3664",
+        "0x531C1b3bdce34DC0C4c5D4a28b4b5Df8F1ed550f",
+        "0xB94dd5f117c2752c57cc55D47aD52b8DDBCCe4f7",
+        "0xFD95bB5C3eF56dd46a98ad7B30863E19117905ef",
+        "0xC04facfdecDe8cfd27193C88e73BfB15e1F53592",
+        "0xB8f9E17da5CB33de40652717794ad2b18281E45A",
+        "0x6D00E0F1e92a89e20029D1bea71d9673F42D5b4e",
+        "0x116559b959862D808FF995651c6107840E8D4bbC",
+        "0x8b248cD7FfD8349cc00105CA2F72a03260c2D4C9",
+        "0x2870581FF75609F5877B20bd2726c79a6Ae1A725",
+        "0x7819D520e5E60608B47c0ad491A9341874513034",
+        "0x3d17886Be7f6F74203Da9549559802a6F4390522",
+        "0x064d005CB7E855E21cCC6d784F54fd0d704e756A",
+        "0x0821012D86AFC517aeB991fdc4FBd0f66411a7F3",
+    ]
+}
+
+
+
+# config/constants.py
+
+# -----------------------------------------------------------------------------
+# Блок-ориентир, соответствующий остановке торгов 07.06.2025 18:10 (Киев)
+# Найден в логах: Итерация поиска стоп-блока → #51043320
+# -----------------------------------------------------------------------------
+STOP_BLOCK = 51043320

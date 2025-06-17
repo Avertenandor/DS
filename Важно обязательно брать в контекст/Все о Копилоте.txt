@@ -1,0 +1,282 @@
+## Практические рекомендации для создания ТЗ
+
+**Как использовать Copilot для написания ТЗ на динамический стейкинг:**
+
+1. **Начните с высокоуровневого описания:**
+   ```
+   Help me create a technical specification for PLEX Dynamic Staking system that:
+   - Analyzes token transfers to corporate wallet
+   - Calculates user eligibility based on contributions
+   - Uses real BSC blockchain data via QuickNode
+   - Has modular Python architecture
+   - NO mock objects or test data
+   ```
+
+2. **Детализируйте каждый модуль отдельно:**
+   - Используйте `/new` для создания структуры проекта
+   - Применяйте `/doc` для генерации документации модулей
+   - Используйте контекст из файлов проекта через #file
+
+3. **Генерируйте примеры кода для ТЗ:**
+   - Copilot хорошо создает примеры использования API
+   - Может предложить структуры данных и интерфейсы
+   - Генерирует заготовки для тестовых сценариев
+
+**Важные моменты для ТЗ:**
+- Всегда указывайте "production-ready code without mocks"
+- Добавляйте конкретные примеры (адреса, хеши транзакций)
+- Требуйте обработку реальных ошибок блокчейна
+- Указывайте версии библиотек и зависимостей
+
+## Готовые шаблоны промптов для PLEX Dynamic Staking
+
+### Для генерации структуры ТЗ:
+```
+Based on the PLEX project requirements, create a detailed technical specification with:
+1. Module architecture (core/, db/, blockchain/, api/, utils/)
+2. Data flow diagrams in text format
+3. API endpoints specification
+4. Database schema for PostgreSQL
+5. Error handling strategies
+6. Performance requirements (handle 10k addresses)
+7. Security considerations for financial data
+```
+
+### Для checkpoint-системы:
+```
+Create a checkpoint validation system for each development stage:
+- Define blocking criteria for critical errors
+- Create quality metrics for each module
+- Generate test scenarios for validation
+- Specify rollback procedures
+Include specific checks for blockchain data integrity
+```
+
+### Для конкретных модулей:
+```
+Generate detailed specification for [MODULE_NAME]:
+- Input/output data structures with Python type hints
+- Dependencies on other modules
+- Error codes and handling
+- Performance benchmarks
+- Example usage code
+Context: PLEX token on BSC, QuickNode provider, no test data
+```
+
+## Ключевые выводы
+
+1. **Copilot Chat Pro эффективен для:**
+   - Генерации структуры проекта и базового кода
+   - Создания документации и примеров
+   - Написания обработчиков ошибок и retry-логики
+   - Генерации тестовых сценариев
+
+2. **Требует особого внимания:**
+   - Безопасность финансовых операций
+   - Специфика работы с блокчейном
+   - Оптимизация для больших объемов данных
+   - Правильная обработка BigNumber
+
+3. **Оптимальная стратегия:**
+   - Используйте как ассистента, а не автопилот
+   - Всегда проверяйте сгенерированный код
+   - Итеративно уточняйте промпты
+   - Сохраняйте успешные промпты для повторного использования# GitHub Copilot Chat Pro для VS Code: Практическое руководство для разработки PLEX Dynamic Staking
+
+## Возможности и ограничения Pro-версии ($10/месяц)
+
+**Платная версия включает:**
+- Неограниченные запросы к базовой модели GPT-4.1
+- 300 премиум-запросов в месяц (GPT-4o, Claude 3.5 Sonnet, o1)
+- Полная интеграция с GitHub.com
+- Мобильная поддержка
+
+## Slash-команды и контекстные возможности
+
+### Основные slash-команды
+- **/explain** - объяснение выбранного кода или файла
+- **/fix** - предложение исправлений ошибок  
+- **/test** - генерация unit-тестов
+- **/doc** - создание документации
+- **/refactor** - рефакторинг кода
+- **/optimize** - оптимизация производительности
+- **/new** - создание новых проектов и файлов
+
+### Контекстные переменные
+Система контекстных переменных позволяет точно указывать область анализа:
+- **#file:filename.js** - ссылка на конкретный файл
+- **#editor** - содержимое текущего редактора
+- **#selection** - выделенный код
+- **#codebase** - семантический поиск по всей кодовой базе
+- **@workspace** - эксперт по контексту всего проекта
+
+### Многофайловое редактирование (Copilot Edits)
+Новый режим позволяет применять изменения сразу в нескольких файлах с визуальным просмотром diff перед применением. Ограничение - максимум 10 файлов в рабочем наборе.
+
+## Технические ограничения оказались критичными для больших проектов
+
+**Размер контекстного окна** составляет 64,000 токенов для стандартной версии и **128,000 токенов** в VS Code Insiders. Однако производительность существенно деградирует при работе с файлами более 2,000 строк, а файлы свыше 12,000 строк могут вызывать ошибки.
+
+**Лимиты Pro-тарифа:**
+- Базовая модель GPT-4.1: неограниченные запросы
+- Премиум-модели: 300 запросов в месяц
+- GPT-4.5 использует множитель 50x (1 запрос = 50 премиум-запросов)
+- Дополнительные запросы: $0.04 за штуку
+
+**Поддержка языков** включает все основные языки программирования, но качество варьируется. JavaScript, Python и TypeScript показывают наилучшие результаты благодаря большему объему обучающих данных.
+
+## Web3 и блокчейн-разработка: практические аспекты
+
+**Что Copilot умеет хорошо:**
+- Генерация базовых структур для Web3.js и Ethers.js
+- Создание функций для взаимодействия с контрактами
+- Обработка событий и логов транзакций
+- Работа с BigNumber и Wei конвертациями
+- Создание retry-логики для RPC запросов
+
+**Критические ограничения для блокчейна:**
+- Требует обязательной ручной проверки всей логики безопасности
+- Не понимает специфику газовой оптимизации
+- Может предлагать устаревшие паттерны
+- Не учитывает специфику QuickNode и других провайдеров
+
+## Работа с внешними API (QuickNode, BSCScan)
+
+**Copilot эффективно генерирует:**
+- Базовую структуру для Web3 провайдеров
+- Retry-логику для нестабильных соединений
+- Обработку rate limits
+- Парсинг ответов и обработку ошибок
+- Кеширование данных
+
+**Пример промпта для QuickNode интеграции:**
+```
+Create a Web3 client class with:
+- QuickNode BSC endpoint connection
+- Automatic retry with exponential backoff
+- Error handling for rate limits
+- Method to fetch logs with chunking
+- Balance check with cache
+```
+
+## Эффективные промпты для блокчейн-разработки
+
+**Структура промпта для PLEX Dynamic Staking:**
+1. Укажите конкретную сеть (BSC) и версии библиотек
+2. Опишите бизнес-логику понятными терминами
+3. Укажите требования по обработке ошибок
+4. Приведите примеры реальных адресов/транзакций
+
+**Примеры эффективных промптов:**
+
+```
+# Для модуля сбора данных:
+Create a Python class for collecting PLEX token transfers on BSC:
+- Use Web3.py with QuickNode endpoint
+- Get Transfer events with proper topic filtering
+- Chunk requests by 1000 blocks to avoid payload limits
+- Handle rate limiting with exponential backoff
+- Save results to PostgreSQL with SQLAlchemy
+- NO mock data, only real blockchain queries
+
+# Для расчета квот:
+Implement eligibility calculation for staking rewards:
+- Input: user address, total sent to corp wallet, snapshot balance
+- Calculate percentage of contribution
+- Apply tiered reward system (1-5%, 6-10%, etc)
+- Consider minimum threshold of 100 PLEX
+- Return detailed breakdown with all calculations
+```
+
+## Работа с модульной архитектурой PLEX
+
+**Эффективное использование для проекта:**
+- Создавайте отдельные чаты для каждого модуля (core/, db/, blockchain/)
+- Используйте #file для подключения конфигов и моделей
+- Применяйте @workspace только после индексации всего проекта
+
+**Практические ограничения:**
+- Максимум 10 файлов одновременно в Copilot Edits
+- Файлы больше 2000 строк вызывают деградацию производительности
+- Контекст теряется между закрытыми файлами
+
+**Рекомендации для PLEX проекта:**
+1. Начинайте с простых модулей (utils, config)
+2. Постепенно добавляйте контекст через #file
+3. Для сложных модулей используйте итеративный подход
+4. Всегда проверяйте импорты и зависимости
+
+## Рефакторинг и оптимизация: сильная сторона инструмента
+
+Copilot эффективно:
+- Идентифицирует алгоритмические улучшения
+- Предлагает современный синтаксис
+- Находит code smells и избыточность
+- Рекомендует паттерны кеширования
+
+**Реальные примеры:**
+- Конвертация O(n²) алгоритмов в более эффективные
+- Предложения по использованию hashmap вместо итераций
+- Оптимизация database queries
+
+## Генерация документации и тестов - одна из сильнейших функций
+
+**Возможности документирования:**
+- JSDoc для JavaScript
+- Docstrings для Python
+- Генерация README файлов
+- API документация
+
+**Тестирование:**
+- Unit-тесты с различными фреймворками (Jest, pytest, xUnit)
+- Edge case testing
+- Mocking и fixtures
+- TDD поддержка через генерацию тестов первыми
+
+## Практические проблемы и решения
+
+**Частые проблемы при работе с блокчейн-кодом:**
+- Генерация устаревших версий Web3.py (используйте явное указание версии)
+- Неправильная обработка BigNumber (всегда проверяйте конвертации)
+- Игнорирование специфики BSC (например, другой gas price)
+
+**Решения:**
+1. Добавляйте в промпт: "Use Web3.py v6.x for BSC network"
+2. Всегда указывайте: "Handle BigNumber/Wei conversions properly"
+3. Используйте .copilotignore для больших JSON файлов (ABI)
+4. Разбивайте сложные функции на части для лучшего понимания
+
+**Оптимизация производительности:**
+- Исключите node_modules и большие логи через .copilotignore
+- Закрывайте неиспользуемые файлы для экономии контекста
+- Перезапускайте VS Code при высоком потреблении RAM
+
+## Практические рекомендации для создания ТЗ
+
+**Как использовать Copilot для написания ТЗ на динамический стейкинг:**
+
+1. **Начните с высокоуровневого описания:**
+   ```
+   Help me create a technical specification for PLEX Dynamic Staking system that:
+   - Analyzes token transfers to corporate wallet
+   - Calculates user eligibility based on contributions
+   - Uses real BSC blockchain data via QuickNode
+   - Has modular Python architecture
+   - NO mock objects or test data
+   ```
+
+2. **Детализируйте каждый модуль отдельно:**
+   - Используйте `/new` для создания структуры проекта
+   - Применяйте `/doc` для генерации документации модулей
+   - Используйте контекст из файлов проекта через #file
+
+3. **Генерируйте примеры кода для ТЗ:**
+   - Copilot хорошо создает примеры использования API
+   - Может предложить структуры данных и интерфейсы
+   - Генерирует заготовки для тестовых сценариев
+
+**Важные моменты для ТЗ:**
+- Всегда указывайте "production-ready code without mocks"
+- Добавляйте конкретные примеры (адреса, хеши транзакций)
+- Требуйте обработку реальных ошибок блокчейна
+- Указывайте версии библиотек и зависимостей

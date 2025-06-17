@@ -1,0 +1,101 @@
+{
+  "test_session": {
+    "start_time": "2025-06-16T14:59:08.761736",
+    "end_time": "2025-06-16T14:59:45.166219",
+    "total_duration": 36.404483,
+    "tester_version": "1.0.0"
+  },
+  "summary": {
+    "total_tests": 10,
+    "passed_tests": 3,
+    "failed_tests": 7,
+    "success_rate": 30.0,
+    "overall_status": "FAILED"
+  },
+  "detailed_results": {
+    "application_initialization": {
+      "status": "PASSED",
+      "execution_time": 1.7359273433685303,
+      "details": {
+        "main_window_created": true,
+        "ui_components_created": true,
+        "tabs_initialized": true,
+        "log_viewer_ready": true
+      }
+    },
+    "blockchain_connection": {
+      "status": "FAILED",
+      "error": "Компоненты не инициализированы за 30 секунд",
+      "execution_time": 34.66150498390198
+    },
+    "corporate_wallet_setup": {
+      "status": "FAILED",
+      "error": "can't invoke \"grid\" command: application has been destroyed",
+      "execution_time": 0.0
+    },
+    "analysis_tab_functionality": {
+      "status": "FAILED",
+      "error": "invalid command name \".!ctkframe.!ctkframe2.!ctktabview.!ctksegmentedbutton.!ctkbutton4\"",
+      "execution_time": 0.0
+    },
+    "rewards_tab_functionality": {
+      "status": "FAILED",
+      "error": "invalid command name \".!ctkframe.!ctkframe2.!ctktabview.!ctksegmentedbutton.!ctkbutton4\"",
+      "execution_time": 0.0
+    },
+    "history_tab_functionality": {
+      "status": "FAILED",
+      "error": "invalid command name \".!ctkframe.!ctkframe2.!ctktabview.!ctksegmentedbutton.!ctkbutton4\"",
+      "execution_time": 0.0
+    },
+    "settings_tab_functionality": {
+      "status": "FAILED",
+      "error": "can't invoke \"grid\" command: application has been destroyed",
+      "execution_time": 0.0
+    },
+    "component_integration": {
+      "status": "PASSED",
+      "execution_time": 0.0,
+      "details": {
+        "analysis_has_staking_manager": false,
+        "rewards_has_components": false,
+        "history_has_manager": true,
+        "settings_has_web3": true,
+        "log_viewer_works": false
+      }
+    },
+    "security_restrictions": {
+      "status": "PASSED",
+      "execution_time": 0.0,
+      "details": {
+        "no_quicknode_fields": true,
+        "no_contract_fields": true,
+        "no_token_critical_fields": true,
+        "no_api_limit_fields": true,
+        "no_gas_critical_fields": true,
+        "security_score": 5
+      }
+    },
+    "stability_and_performance": {
+      "status": "FAILED",
+      "error": "invalid command name \".!ctkframe.!ctkframe2.!ctktabview.!ctksegmentedbutton.!ctkbutton4\"",
+      "execution_time": 0.0
+    }
+  },
+  "conclusions": {
+    "interface_functionality": "PASSED",
+    "security_compliance": "PASSED",
+    "component_integration": "PASSED",
+    "performance_acceptable": "PASSED",
+    "production_ready": "NO",
+    "recommendations": [
+      "Исправить проблемы в тесте: blockchain_connection",
+      "Исправить проблемы в тесте: corporate_wallet_setup",
+      "Исправить проблемы в тесте: analysis_tab_functionality",
+      "Исправить проблемы в тесте: rewards_tab_functionality",
+      "Исправить проблемы в тесте: history_tab_functionality",
+      "Исправить проблемы в тесте: settings_tab_functionality",
+      "Исправить проблемы в тесте: stability_and_performance"
+    ]
+  }
+}
